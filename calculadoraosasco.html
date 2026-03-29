@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gestão Financeira</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            width: 380px;
+            border-top: 5px solid #00ff88;
+            transition: all 0.3s ease;
+        }
+        .hidden { display: none; }
+        
+        h2 { text-align: center; color: #00ff88; margin-bottom: 25px; text-transform: uppercase; font-size: 1.2rem; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: #888; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: #252525;
+            color: #00ff88;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+        }
+        .divider { border-top: 1px dashed #444; margin: 15px 0; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .val-res { font-weight: bold; }
+        .cliente-destaque { color: #00ff88; font-size: 1.2rem; }
+        
+        .btn-toggle {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .btn-toggle:hover { background: #444; color: #00ff88; }
+        
+        .btn-clear {
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .btn-clear:hover { background: #ff4444; color: white; }
+
+        #calcBasica h2 { color: #00d4ff; }
+        #calcBasica { border-top: 5px solid #00d4ff; }
+        .res-basico { font-size: 1.5rem; color: #00d4ff; text-align: center; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <button class="btn-toggle" onclick="alternarCalculadoras()">🔄 Alternar para Calculadora Comum</button>
+
+    <div id="calcLavagem" class="card">
+        <h2>Lavagem & Sintonia</h2>
+        
+        <div class="input-group">
+            <label>VALOR TOTAL (SUJO):</label>
+            <input type="number" id="valorTotal" placeholder="Ex: 400000" oninput="calcularLavagem()">
+        </div>
+
+        <div class="input-group">
+            <label>TAXA DO CLIENTE (%):</label>
+            <input type="number" id="taxaCliente" placeholder="Ex: 30" oninput="calcularLavagem()">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+            <span>ENTREGAR AO CLIENTE:</span>
+            <span id="entregaCliente" class="val-res cliente-destaque">R$ 0,00</span>
+        </div>
+
+        <div class="row">
+            <span>SINTONIA (20%):</span>
+            <span id="pagoSintonia" class="val-res" style="color: #ff4444;">R$ 0,00</span>
+        </div>
+
+        <div class="row">
+            <span style="color: #888;">SEU LUCRO LÍQUIDO:</span>
+            <span id="lucroFinal" class="val-res" style="color: #00d4ff;">R$ 0,00</span>
+        </div>
+
+        <button class="btn-clear" onclick="limpar('lavagem')">Limpar Campos</button>
+    </div>
+
+    <div id="calcBasica" class="card hidden">
+        <h2>Calculadora de %</h2>
+        
+        <div class="input-group">
+            <label>VALOR:</label>
+            <input type="number" id="valorBase" placeholder="Ex: 1000" oninput="calcularBasico()">
+        </div>
+
+        <div class="input-group">
+            <label>QUAL PORCENTAGEM? (%):</label>
+            <input type="number" id="porcentagemBase" placeholder="Ex: 50" oninput="calcularBasico()">
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="text-align: center;">
+            <label>RESULTADO DA PORCENTAGEM:</label>
+            <span id="resultadoBasico" class="res-basico">R$ 0,00</span>
+        </div>
+
+        <button class="btn-clear" onclick="limpar('basica')">Limpar Campos</button>
+    </div>
+
+<script>
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+    }
+
+    // Lógica da Lavagem (Sua Regra de Negócio)
+    function calcularLavagem() {
+        const totalSujo = parseFloat(document.getElementById('valorTotal').value) || 0;
+        const taxaCli = parseFloat(document.getElementById('taxaCliente').value) || 0;
+
+        const lucroBruto = totalSujo * (taxaCli / 100);
+        const entregaCliente = totalSujo - lucroBruto;
+        const pagoSintonia = lucroBruto * 0.20;
+        const lucroLiquido = lucroBruto - pagoSintonia;
+
+        document.getElementById('entregaCliente').innerText = formatarMoeda(entregaCliente);
+        document.getElementById('pagoSintonia').innerText = formatarMoeda(pagoSintonia);
+        document.getElementById('lucroFinal').innerText = formatarMoeda(lucroLiquido);
+    }
+
+    // Lógica da Calculadora Básica
+    function calcularBasico() {
+        const valor = parseFloat(document.getElementById('valorBase').value) || 0;
+        const perc = parseFloat(document.getElementById('porcentagemBase').value) || 0;
+        
+        const resultado = (valor * perc) / 100;
+        document.getElementById('resultadoBasico').innerText = formatarMoeda(resultado);
+    }
+
+    // Alternar entre as telas
+    function alternarCalculadoras() {
+        const lav = document.getElementById('calcLavagem');
+        const bas = document.getElementById('calcBasica');
+        const btn = document.querySelector('.btn-toggle');
+
+        if (lav.classList.contains('hidden')) {
+            lav.classList.remove('hidden');
+            bas.classList.add('hidden');
+            btn.innerText = "🔄 Alternar para Calculadora Comum";
+        } else {
+            lav.classList.add('hidden');
+            bas.classList.remove('hidden');
+            btn.innerText = "🔄 Alternar para Lavagem (RP)";
+        }
+    }
+
+    // Função Limpar
+    function limpar(tipo) {
+        if(tipo === 'lavagem') {
+            document.getElementById('valorTotal').value = '';
+            document.getElementById('taxaCliente').value = '';
+            calcularLavagem();
+        } else {
+            document.getElementById('valorBase').value = '';
+            document.getElementById('porcentagemBase').value = '';
+            calcularBasico();
+        }
+    }
+</script>
+
+</body>
+</html>
