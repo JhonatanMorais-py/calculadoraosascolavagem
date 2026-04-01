@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Lavagem Profissional</title>
+
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -12,9 +13,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
+
         .card {
             background-color: #1a1a1a;
             padding: 30px;
@@ -23,9 +25,24 @@
             width: 380px;
             border-left: 5px solid #00ff88;
         }
-        h2 { text-align: center; color: #00ff88; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+
+        h2 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
         .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #888; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
         input {
             width: 100%;
             padding: 12px;
@@ -36,20 +53,61 @@
             font-size: 1.1rem;
             box-sizing: border-box;
         }
-        .divider { border-top: 1px dashed #444; margin: 20px 0; }
-        .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1rem; }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: #111;
+            color: #00ff88;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #00ff88;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .divider {
+            border-top: 1px dashed #444;
+            margin: 20px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
         .label-res { color: #bbb; }
         .val-res { font-weight: bold; }
-        .cliente-destaque { color: #00ff88; font-size: 1.3rem; border-bottom: 1px solid #00ff88; }
+
+        .cliente-destaque {
+            color: #00ff88;
+            font-size: 1.3rem;
+            border-bottom: 1px solid #00ff88;
+        }
+
         .sintonia-val { color: #ff4444; }
         .lucro-val { color: #00d4ff; }
     </style>
 </head>
+
 <body>
 
 <div class="card">
     <h2>Lavagem & Lucro</h2>
-    
+
     <div class="input-group">
         <label>VALOR TOTAL (SUJO):</label>
         <input type="number" id="valorTotal" placeholder="Ex: 400000" oninput="calcular()">
@@ -83,33 +141,56 @@
         <span class="label-res">SEU LUCRO LÍQUIDO:</span>
         <span id="lucroFinal" class="val-res lucro-val">R$ 0,00</span>
     </div>
+
+    <div class="divider"></div>
+
+    <div class="input-group">
+        <label>RESULTADO PARA WHATSAPP:</label>
+        <textarea id="resultadoTexto" rows="7" readonly></textarea>
+    </div>
+
+    <button onclick="copiarTexto()">COPIAR RESULTADO</button>
 </div>
 
 <script>
-    function calcular() {
-        const totalSujo = parseFloat(document.getElementById('valorTotal').value) || 0;
-        const taxaCli = parseFloat(document.getElementById('taxaCliente').value) || 0;
+function calcular() {
+    const totalSujo = parseFloat(document.getElementById('valorTotal').value) || 0;
+    const taxaCli = parseFloat(document.getElementById('taxaCliente').value) || 0;
 
-        // 1. Quanto de taxa você tirou do cliente (Seu lucro antes de pagar a Sintonia)
-        const lucroBruto = totalSujo * (taxaCli / 100);
+    const lucroBruto = totalSujo * (taxaCli / 100);
+    const entregaCliente = totalSujo - lucroBruto;
+    const pagoSintonia = lucroBruto * 0.20;
+    const lucroLiquido = lucroBruto - pagoSintonia;
 
-        // 2. Quanto sobra para o cliente
-        const entregaCliente = totalSujo - lucroBruto;
+    const money = (v) => v.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
 
-        // 3. 20% do SEU LUCRO vai para a Sintonia
-        const pagoSintonia = lucroBruto * 0.20;
+    document.getElementById('entregaCliente').innerText = money(entregaCliente);
+    document.getElementById('lucroBruto').innerText = money(lucroBruto);
+    document.getElementById('pagoSintonia').innerText = money(pagoSintonia);
+    document.getElementById('lucroFinal').innerText = money(lucroLiquido);
 
-        // 4. O que sobra de verdade para você
-        const lucroLiquido = lucroBruto - pagoSintonia;
+    // TEXTO PARA WHATSAPP
+    const texto = `💰 *RELATÓRIO DE LAVAGEM*
 
-        // Formatação para Moeda
-        const money = (v) => v.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+💵 Valor recebido: ${money(totalSujo)}
+📊 Taxa aplicada: ${taxaCli}%
 
-        document.getElementById('entregaCliente').innerText = money(entregaCliente);
-        document.getElementById('lucroBruto').innerText = money(lucroBruto);
-        document.getElementById('pagoSintonia').innerText = money(pagoSintonia);
-        document.getElementById('lucroFinal').innerText = money(lucroLiquido);
-    }
+👤 Valor entregue ao cliente: ${money(entregaCliente)}
+
+📈 Lucro bruto: ${money(lucroBruto)}
+🏢 Sintonia (20%): ${money(pagoSintonia)}
+
+✅ Lucro líquido: ${money(lucroLiquido)}`;
+
+    document.getElementById('resultadoTexto').value = texto;
+}
+
+function copiarTexto() {
+    const texto = document.getElementById('resultadoTexto');
+    texto.select();
+    document.execCommand('copy');
+    alert("Copiado para o WhatsApp!");
+}
 </script>
 
 </body>
